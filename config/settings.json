@@ -1,0 +1,199 @@
+{
+  "application": {
+    "name": "Task Collection System",
+    "version": "1.0.0",
+    "description": "Automated task collection system powered by MCP servers",
+    "timezone": "Asia/Tokyo",
+    "language": "ja"
+  },
+  "data_collection": {
+    "gmail": {
+      "enabled": true,
+      "check_interval_hours": 24,
+      "exclude_labels": [
+        "SPAM",
+        "TRASH",
+        "PROMOTIONS"
+      ],
+      "include_only_direct": true,
+      "unread_threshold_hours": 24
+    },
+    "slack": {
+      "enabled": true,
+      "check_interval_hours": 24,
+      "mention_types": [
+        "@username",
+        "direct_message"
+      ],
+      "exclude_channels": [
+        "random",
+        "general"
+      ],
+      "unread_threshold_hours": 24
+    },
+    "github": {
+      "enabled": true,
+      "check_interval_hours": 24,
+      "issue_states": [
+        "open"
+      ],
+      "include_assigned_only": true,
+      "priority_labels": [
+        "urgent",
+        "high-priority",
+        "bug"
+      ]
+    },
+    "google_calendar": {
+      "enabled": true,
+      "check_interval_hours": 24,
+      "calendar_ids": [
+        "primary"
+      ],
+      "days_ahead": 7,
+      "include_all_day_events": true
+    }
+  },
+  "notion_integration": {
+    "database_properties": {
+      "completed": {
+        "type": "checkbox",
+        "name": "完了"
+      },
+      "task_name": {
+        "type": "title",
+        "name": "タスク名"
+      },
+      "category": {
+        "type": "select",
+        "name": "カテゴリ",
+        "options": [
+          "Email",
+          "Slack",
+          "GitHub",
+          "Calendar"
+        ]
+      },
+      "priority": {
+        "type": "select",
+        "name": "優先度",
+        "options": [
+          "High",
+          "Medium",
+          "Low"
+        ]
+      },
+      "due_date": {
+        "type": "date",
+        "name": "期限"
+      },
+      "planned_completion": {
+        "type": "date",
+        "name": "完了予定日"
+      },
+      "completion_date": {
+        "type": "date",
+        "name": "完了日"
+      },
+      "source_url": {
+        "type": "url",
+        "name": "ソースURL"
+      },
+      "description": {
+        "type": "rich_text",
+        "name": "説明"
+      },
+      "status": {
+        "type": "select",
+        "name": "ステータス",
+        "options": [
+          "未対応",
+          "進行中",
+          "完了"
+        ]
+      }
+    },
+    "priority_rules": {
+      "gmail": {
+        "high_priority_senders": [
+          "boss@company.com",
+          "client@important.com"
+        ],
+        "high_priority_keywords": [
+          "urgent",
+          "asap",
+          "緊急",
+          "至急"
+        ],
+        "default_priority": "Medium"
+      },
+      "slack": {
+        "high_priority_channels": [
+          "alerts",
+          "incidents"
+        ],
+        "medium_priority_channels": [
+          "team",
+          "project"
+        ],
+        "default_priority": "Low"
+      },
+      "github": {
+        "high_priority_labels": [
+          "urgent",
+          "critical",
+          "bug"
+        ],
+        "medium_priority_labels": [
+          "enhancement",
+          "feature"
+        ],
+        "default_priority": "Medium"
+      },
+      "calendar": {
+        "default_priority": "Medium"
+      }
+    },
+    "due_date_rules": {
+      "gmail": {
+        "days_to_add": 2,
+        "business_days_only": true
+      },
+      "slack": {
+        "days_to_add": 1,
+        "business_days_only": false
+      },
+      "github": {
+        "days_to_add": 7,
+        "use_milestone_date": true
+      },
+      "calendar": {
+        "use_event_date": true
+      }
+    }
+  },
+  "error_handling": {
+    "retry_attempts": 3,
+    "retry_delay_seconds": 5,
+    "timeout_seconds": 30,
+    "log_errors": true,
+    "continue_on_error": true
+  },
+  "logging": {
+    "level": "INFO",
+    "file_path": "logs/schedule_automation.log",
+    "max_file_size_mb": 10,
+    "backup_count": 5,
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  },
+  "security": {
+    "mask_sensitive_data": true,
+    "encrypt_tokens": true,
+    "token_refresh_threshold_hours": 1
+  },
+  "desktop": {
+    "claude_path": "C:\\Users\\kito\\AppData\\Local\\AnthropicClaude\\Claude.exe",
+    "auto_refresh_google_tokens": true,
+    "persist_google_tokens": true
+  }
+}

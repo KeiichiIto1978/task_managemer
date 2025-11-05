@@ -1,0 +1,89 @@
+{
+  "mcpServers": {
+    "gmail": {
+      "command": "python",
+      "args": [
+        "-m",
+        "servers.gmail_server"
+      ],
+      "env": {
+        "PYTHONPATH": "",
+        "FASTMCP_LOG_LEVEL": "DEBUG",
+        "DEBUG_MCP_ENV": "1"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_recent_gmail_messages"
+      ],
+      "disabledTools": []
+    },
+    "slack": {
+      "command": "python",
+      "args": [
+        "-m",
+        "servers.slack_server"
+      ],
+      "env": {
+        "PYTHONPATH": "",
+        "FASTMCP_LOG_LEVEL": "DEBUG",
+        "DEBUG_MCP_ENV": "1"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_recent_slack_messages"
+      ],
+      "disabledTools": []
+    },
+    "github": {
+      "command": "python",
+      "args": [
+        "-m",
+        "servers.github_server"
+      ],
+      "env": {
+        "PYTHONPATH": "",
+        "FASTMCP_LOG_LEVEL": "DEBUG",
+        "DEBUG_MCP_ENV": "1"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_assigned_github_issues"
+      ],
+      "disabledTools": []
+    },
+    "google-calendar": {
+      "command": "python",
+      "args": [
+        "-m",
+        "servers.calendar_server"
+      ],
+      "env": {
+        "PYTHONPATH": "",
+        "FASTMCP_LOG_LEVEL": "DEBUG",
+        "DEBUG_MCP_ENV": "1"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_upcoming_events"
+      ],
+      "disabledTools": []
+    },
+    "notion": {
+      "command": "python",
+      "args": [
+        "-m",
+        "servers.notion_server"
+      ],
+      "env": {
+        "PYTHONPATH": "",
+        "FASTMCP_LOG_LEVEL": "DEBUG",
+        "DEBUG_MCP_ENV": "1"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_notion_tasks"
+      ],
+      "disabledTools": []
+    }
+  }
+}
