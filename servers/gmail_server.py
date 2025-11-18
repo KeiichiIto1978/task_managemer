@@ -10,23 +10,34 @@ from typing import Any, Dict, List
 import requests
 from fastmcp import FastMCP
 
-from .base import get_env, load_environment
+from .base import get_env, load_environment, maybe_refresh_google_tokens
 
 LOGGER = logging.getLogger("gmail_mcp")
 API_BASE = "https://gmail.googleapis.com/gmail/v1/users/me/messages"
+REQUEST_TIMEOUT = 15
 
 
 def _build_headers() -> Dict[str, str]:
+    maybe_refresh_google_tokens()
     token = get_env("GMAIL_ACCESS_TOKEN")
     return {"Authorization": f"Bearer {token}"}
 
 
+def _get_with_auto_refresh(url: str, *, params: Dict[str, Any]) -> requests.Response:
+    headers = _build_headers()
+    response = requests.get(url, params=params, headers=headers, timeout=REQUEST_TIMEOUT)
+    if response.status_code == 401:
+        LOGGER.info("Gmail token appears expired. Refreshing and retrying once.")
+        maybe_refresh_google_tokens(force=True)
+        headers = _build_headers()
+        response = requests.get(url, params=params, headers=headers, timeout=REQUEST_TIMEOUT)
+    return response
+
+
 def _fetch_message_detail(message_id: str) -> Dict[str, Any]:
-    response = requests.get(
+    response = _get_with_auto_refresh(
         f"{API_BASE}/{message_id}",
         params={"format": "metadata", "metadataHeaders": ["Subject", "From", "Date"]},
-        headers=_build_headers(),
-        timeout=15,
     )
     response.raise_for_status()
     payload = response.json()
@@ -46,11 +57,9 @@ def _fetch_message_detail(message_id: str) -> Dict[str, Any]:
 
 
 def _list_recent_messages(max_results: int) -> List[Dict[str, Any]]:
-    response = requests.get(
+    response = _get_with_auto_refresh(
         API_BASE,
         params={"maxResults": max_results, "labelIds": "INBOX"},
-        headers=_build_headers(),
-        timeout=15,
     )
     response.raise_for_status()
     message_ids = [item["id"] for item in response.json().get("messages", [])]

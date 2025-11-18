@@ -10,19 +10,32 @@ from typing import Any, Dict, List
 import requests
 from fastmcp import FastMCP
 
-from .base import get_env, get_setting, load_environment
+from .base import get_env, get_setting, load_environment, maybe_refresh_google_tokens
 
 LOGGER = logging.getLogger("calendar_mcp")
 CALENDAR_API = "https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events"
+REQUEST_TIMEOUT = 15
 
 
 def _build_headers() -> Dict[str, str]:
+    maybe_refresh_google_tokens()
     token = get_env("GOOGLE_CALENDAR_ACCESS_TOKEN")
     return {"Authorization": f"Bearer {token}"}
 
 
+def _get_with_auto_refresh(url: str, *, params: Dict[str, Any]) -> requests.Response:
+    headers = _build_headers()
+    response = requests.get(url, params=params, headers=headers, timeout=REQUEST_TIMEOUT)
+    if response.status_code == 401:
+        LOGGER.info("Calendar token appears expired. Refreshing and retrying once.")
+        maybe_refresh_google_tokens(force=True)
+        headers = _build_headers()
+        response = requests.get(url, params=params, headers=headers, timeout=REQUEST_TIMEOUT)
+    return response
+
+
 def _list_events(calendar_id: str, time_min: datetime, time_max: datetime, limit: int) -> List[Dict[str, Any]]:
-    response = requests.get(
+    response = _get_with_auto_refresh(
         CALENDAR_API.format(calendar_id=calendar_id),
         params={
             "timeMin": time_min.isoformat() + "Z",
@@ -31,8 +44,6 @@ def _list_events(calendar_id: str, time_min: datetime, time_max: datetime, limit
             "maxResults": limit,
             "orderBy": "startTime",
         },
-        headers=_build_headers(),
-        timeout=15,
     )
     response.raise_for_status()
     payload = response.json()

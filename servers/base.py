@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
+from datetime import datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict
@@ -15,6 +17,8 @@ from dotenv import load_dotenv
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ENV_PATH = PROJECT_ROOT / ".env"
 SETTINGS_PATH = PROJECT_ROOT / "config" / "settings.json"
+LOGGER = logging.getLogger("mcp.base")
+_LAST_GOOGLE_REFRESH: datetime | None = None
 
 
 @lru_cache(maxsize=1)
@@ -65,3 +69,47 @@ def get_setting(*keys: str, default: Any = None) -> Any:
         if data is None:
             return default
     return data
+
+
+def _should_refresh(now: datetime, *, force: bool) -> bool:
+    """Decide whether we should refresh based on last timestamp and threshold."""
+    if force or _LAST_GOOGLE_REFRESH is None:
+        return True
+    threshold_hours = float(get_setting("security", "token_refresh_threshold_hours", default=1) or 1)
+    if threshold_hours <= 0:
+        return False
+    threshold = timedelta(hours=threshold_hours)
+    return now - _LAST_GOOGLE_REFRESH >= threshold
+
+
+def maybe_refresh_google_tokens(*, force: bool = False) -> Dict[str, str]:
+    """
+    Refresh Google access tokens when auto-refresh is enabled or when forced.
+
+    Returns a dict of updated token values (possibly empty).
+    """
+
+    from scripts.refresh_google_tokens import refresh_tokens  # Local import to avoid circular deps
+
+    desktop_cfg = get_setting("desktop", default={}) or {}
+    auto_refresh_enabled = bool(desktop_cfg.get("auto_refresh_google_tokens", False))
+
+    if not auto_refresh_enabled and not force:
+        return {}
+
+    now = datetime.utcnow()
+    if not _should_refresh(now, force=force):
+        return {}
+
+    persist_tokens = bool(desktop_cfg.get("persist_google_tokens", True))
+
+    try:
+        tokens = refresh_tokens(persist=persist_tokens, update_process_env=True)
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("Failed to refresh Google tokens: %s", exc)
+        raise
+
+    global _LAST_GOOGLE_REFRESH  # noqa: PLW0603
+    _LAST_GOOGLE_REFRESH = now
+    LOGGER.info("Refreshed Google access tokens (persist=%s)", persist_tokens)
+    return tokens
